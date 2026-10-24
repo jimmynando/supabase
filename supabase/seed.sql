@@ -1,0 +1,1 @@
+-- Dados iniciais aplicados após as migrations em `npm run db:reset`.

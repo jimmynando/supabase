@@ -14,7 +14,8 @@ Ambiente Supabase local do time, versionado neste repositório. O Supabase CLI �
 8. [Projeto remoto](#8-projeto-remoto)
 9. [Convenções do repositório](#9-convenções-do-repositório)
 10. [Solução de problemas](#10-solução-de-problemas)
-11. [Referências](#11-referências)
+11. [n8n (automações)](#11-n8n-automações)
+12. [Referências](#12-referências)
 
 ## 1. Visão geral
 
@@ -38,6 +39,7 @@ Para reativá-los, veja [Configuração](#7-configuração).
 | npm | o que acompanha o Node | Gerenciador padrão do time. Não use pnpm/yarn aqui. |
 | Docker | Engine ou Desktop recente | Precisa estar em execução. |
 | Git | qualquer versão recente | |
+| Docker Compose v2 | `docker compose version` deve funcionar | Necessário para o n8n. O Docker Desktop já inclui; em Linux instale o `docker-compose-plugin`. |
 | Memória | 7 GB livres para o Docker (sugerido) | |
 
 Não instale o Supabase CLI globalmente: ele vem com `npm install` e é executado pelos scripts npm.
@@ -120,6 +122,10 @@ npm run db:stop
 │   ├── config.toml        # configuração do stack local (serviços, portas, auth, etc.)
 │   ├── migrations/        # migrations SQL, aplicadas em ordem cronológica
 │   └── seed.sql           # dados iniciais, aplicados após as migrations no db:reset
+├── n8n/
+│   ├── docker-compose.yml # n8n em container, na rede do Supabase
+│   ├── init.mjs           # cria o n8n/.env e confere Docker/rede (usado pelos scripts n8n:*)
+│   └── .env.example       # modelo das variáveis do n8n (copie para n8n/.env)
 ├── package.json           # scripts npm e versão fixada do Supabase CLI
 ├── package-lock.json      # trava as dependências (versionar sempre)
 ├── .npmrc                 # save-exact e engine-strict
@@ -140,6 +146,10 @@ npm run db:stop
 | `npm run migration:new -- <nome>` | `supabase migration new` | Cria um arquivo de migration vazio. |
 | `npm run db:link` | `supabase link` | Vincula o repositório a um projeto remoto. |
 | `npm run db:push` | `supabase db push` | Aplica as migrations no projeto remoto vinculado. |
+| `npm run n8n:init` | `node n8n/init.mjs` | Cria o `n8n/.env` (se não existir) e confere os pré-requisitos. |
+| `npm run n8n:start` | `docker compose up -d` | Roda o `n8n:init` e sobe o n8n (exige o Supabase em execução). |
+| `npm run n8n:stop` | `docker compose down` | Para o n8n (os dados ficam no volume Docker). |
+| `npm run n8n:logs` | `docker compose logs -f` | Acompanha os logs do n8n. |
 
 Qualquer outro comando do CLI pode ser executado com `npx supabase <comando>`.
 
@@ -237,13 +247,50 @@ Provável conversão para CRLF. Rode `git ls-files --eol` para conferir e garant
 **`supabase: command not found` ou binário do CLI ausente**
 O `npm install` foi executado com `--ignore-scripts` ou falhou no `postinstall`. Apague `node_modules` e rode `npm install` novamente. Use sempre `npm run ...` ou `npx supabase ...`.
 
+**`network supabase_network_supabase declared as external, but could not be found`**
+O Supabase não está em execução (a rede só existe com ele no ar). Rode `npm run db:start` e depois `npm run n8n:start`. Confira o nome com `docker network ls`.
+
 **`EBADENGINE` ao instalar**
 A versão do Node é inferior à exigida. Use Node 22 ou superior (`nvm use`).
 
 **Imagens Docker não baixam**
 Verifique a conexão, proxies corporativos e se o login no registry do Docker não está bloqueando (`docker logout public.ecr.aws`).
 
-## 11. Referências
+## 11. n8n (automações)
+
+O n8n roda em um container próprio (`n8n/docker-compose.yml`) e entra na rede Docker do Supabase (`supabase_network_<project_id>`). Por isso ele enxerga os containers do Supabase pelo nome, sem depender de `localhost`.
+
+**Subir**
+
+```bash
+npm install
+npm run db:start      # o Supabase precisa estar no ar antes
+npm run n8n:start
+```
+
+Na primeira execução o `n8n:start` cria o `n8n/.env` sozinho, com uma `N8N_ENCRYPTION_KEY` nova, e confere se o `docker compose` existe e se a rede do Supabase está no ar. Se algo faltar, ele diz o que fazer.
+
+O n8n abre em <http://localhost:5678>; na primeira vez ele pede a criação do usuário owner. Os dados (workflows, credenciais, owner) ficam no volume Docker `n8n_n8n_data`, em SQLite, na máquina de cada pessoa, e não em `n8n/`. Para zerar o n8n: `npm run n8n:stop` e depois `docker volume rm n8n_n8n_data` (apaga tudo).
+
+**Endereços do Supabase vistos de dentro do n8n**
+
+| O quê | Endereço |
+| --- | --- |
+| API (REST `/rest/v1`, Auth `/auth/v1`, Storage `/storage/v1`) | `http://supabase_kong_supabase:8000` |
+| Postgres | host `supabase_db_supabase`, porta **5432** (interna, não a 54322), usuário/senha/banco `postgres` |
+| App rodando no host (ex.: front em `:3000`) | `http://host.docker.internal:3000` |
+
+Os nomes `supabase_*_supabase` usam o `project_id` do `config.toml`. **Não altere o `project_id`**, senão os nomes mudam e o `docker-compose.yml` do n8n deixa de achar a rede.
+
+**Credenciais no n8n** (criadas à mão em cada máquina, dentro do n8n)
+
+- **Postgres**: os dados da tabela acima.
+- **Supabase API** (nó Supabase): Host `http://supabase_kong_supabase:8000` e Service Role Secret igual ao `service_role key` de `npm run db:status`.
+- **HTTP Request** (sem nó dedicado): `GET http://supabase_kong_supabase:8000/rest/v1/<tabela>` com os headers `apikey: <chave>` e `Authorization: Bearer <chave>`.
+
+A `N8N_ENCRYPTION_KEY` é de cada pessoa e não deve ser versionada nem trocada depois de criar credenciais (elas deixam de abrir). O `n8n/.env` é ignorado pelo Git, e o `n8n:start` nunca sobrescreve um `.env` existente. Se apagar o `.env` mas manter o volume, o n8n não sobe (chave diferente da gravada): restaure a chave antiga ou apague o volume.
+
+## 12. Referências
 
 - [Supabase CLI](https://supabase.com/docs/guides/local-development/cli/getting-started)
 - [Referência de comandos do CLI](https://supabase.com/docs/reference/cli/introduction)

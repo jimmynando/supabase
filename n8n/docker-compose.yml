@@ -1,0 +1,31 @@
+name: n8n
+
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:2.44.6
+    container_name: n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY:?defina N8N_ENCRYPTION_KEY em n8n/.env}
+      GENERIC_TIMEZONE: ${GENERIC_TIMEZONE:-America/Sao_Paulo}
+      TZ: ${GENERIC_TIMEZONE:-America/Sao_Paulo}
+      N8N_SECURE_COOKIE: "false"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - default
+      - supabase
+
+volumes:
+  n8n_data:
+
+networks:
+  # Rede criada pelo Supabase CLI (supabase_network_<project_id>).
+  # Suba o Supabase antes (npm run db:start).
+  supabase:
+    external: true
+    name: supabase_network_supabase

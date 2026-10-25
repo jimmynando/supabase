@@ -8,7 +8,11 @@
     "db:reset": "supabase db reset",
     "db:link": "supabase link",
     "db:push": "supabase db push",
-    "migration:new": "supabase migration new"
+    "migration:new": "supabase migration new",
+    "n8n:init": "node n8n/init.mjs",
+    "n8n:start": "node n8n/init.mjs && docker compose -f n8n/docker-compose.yml up -d",
+    "n8n:stop": "node n8n/init.mjs --env-only && docker compose -f n8n/docker-compose.yml down",
+    "n8n:logs": "node n8n/init.mjs --env-only && docker compose -f n8n/docker-compose.yml logs -f n8n"
   },
   "devDependencies": {
     "supabase": "2.122.0"

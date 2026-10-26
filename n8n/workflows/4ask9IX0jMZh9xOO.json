@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-10-26T11:12:01.462Z",
+  "updatedAt": "2026-10-26T17:01:12.786Z",
   "createdAt": "2026-10-26T10:54:55.174Z",
   "id": "4ask9IX0jMZh9xOO",
   "name": "My workflow",
@@ -67,9 +67,9 @@
   "meta": null,
   "nodeGroups": [],
   "pinData": {},
-  "versionId": "77cfde33-3f10-46ff-877b-4c5b4b4b0b41",
+  "versionId": "e5e84397-022a-4f87-8da6-18f5b6f1dd68",
   "activeVersionId": null,
-  "versionCounter": 29,
+  "versionCounter": 39,
   "triggerCount": 0,
   "sourceWorkflowId": null,
   "tags": [],

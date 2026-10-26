@@ -1,0 +1,100 @@
+{
+  "updatedAt": "2026-10-26T11:12:01.462Z",
+  "createdAt": "2026-10-26T10:54:55.174Z",
+  "id": "4ask9IX0jMZh9xOO",
+  "name": "My workflow",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "48f856cd-31af-482b-a91f-8822b14ab448",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/test_table",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SECRET_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SECRET_KEY }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "9597ea41-c7c8-47a1-99bf-573e2a7c2a79",
+      "name": "HTTP Request"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "77cfde33-3f10-46ff-877b-4c5b4b4b0b41",
+  "activeVersionId": null,
+  "versionCounter": 29,
+  "triggerCount": 0,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-10-26T10:54:55.177Z",
+      "createdAt": "2026-10-26T10:54:55.177Z",
+      "role": "workflow:owner",
+      "workflowId": "4ask9IX0jMZh9xOO",
+      "projectId": "kwocms9jWx4yCyJ3",
+      "project": {
+        "updatedAt": "2026-10-26T10:39:05.634Z",
+        "createdAt": "2026-10-26T10:36:16.356Z",
+        "id": "kwocms9jWx4yCyJ3",
+        "name": "Fernando Gonçalves <jimmynando@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "bfcfe753-120e-4abc-a086-48a4dcab4751"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

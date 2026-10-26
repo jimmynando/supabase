@@ -8,6 +8,7 @@
     "db:reset": "supabase db reset",
     "db:link": "supabase link",
     "db:push": "supabase db push",
+    "db:pull": "supabase db pull",
     "migration:new": "supabase migration new",
     "n8n:init": "node n8n/init.mjs",
     "n8n:start": "node n8n/init.mjs && docker compose -f n8n/docker-compose.yml up -d",

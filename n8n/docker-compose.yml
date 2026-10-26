@@ -18,6 +18,8 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - n8n_data:/home/node/.n8n
+      # Workflows versionados: `npm run n8n:export` / `npm run n8n:import`
+      - ./workflows:/home/node/workflows
     networks:
       - default
       - supabase
